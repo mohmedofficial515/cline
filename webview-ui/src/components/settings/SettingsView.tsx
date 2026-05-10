@@ -1,4 +1,4 @@
-import type { ExtensionMessage } from "@shared/ExtensionMessage"
+﻿import type { ExtensionMessage } from "@shared/ExtensionMessage"
 import { ResetStateRequest } from "@shared/proto/cline/state"
 import { UserOrganization } from "@shared/proto/index.cline"
 import {
@@ -93,7 +93,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
 	{
 		id: "about",
 		name: "About",
-		tooltipText: "About Cline",
+		tooltipText: "About GenCoder",
 		headerText: "About",
 		icon: Info,
 	},

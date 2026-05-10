@@ -1,6 +1,7 @@
 // Map providers to their specific model ID keys
 
 import { Secrets, SettingsKey } from "@shared/storage/state-keys"
+import { Mode } from "@shared/storage/types"
 import {
 	ApiProvider,
 	anthropicDefaultModelId,
@@ -122,16 +123,18 @@ const ProviderDefaultModelMap: Partial<Record<ApiProvider, string>> = {
  * Get the provider-specific model ID key for a given provider and mode.
  * Different providers store their model IDs in different state keys.
  */
-export function getProviderModelIdKey(provider: ApiProvider, mode: "act" | "plan"): SettingsKey {
+export function getProviderModelIdKey(provider: ApiProvider, mode: Mode): SettingsKey {
+	// Research mode reuses act mode configuration
+	const effectiveMode: "act" | "plan" = mode === "research" ? "act" : mode
 	const keySuffix = ProviderKeyMap[provider]
 	if (keySuffix) {
 		// E.g. actModeOpenAiModelId, planModeOpenAiModelId, etc.
-		return `${mode}Mode${keySuffix}` as SettingsKey
+		return `${effectiveMode}Mode${keySuffix}` as SettingsKey
 	}
 
 	// For providers without a specific key (anthropic, gemini, bedrock, etc.),
 	// they use the generic actModeApiModelId/planModeApiModelId
-	return `${mode}ModeApiModelId`
+	return `${effectiveMode}ModeApiModelId`
 }
 
 export function getProviderDefaultModelId(provider: ApiProvider): string | null {

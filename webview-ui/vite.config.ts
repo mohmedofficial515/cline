@@ -39,6 +39,7 @@ console.log("Building webview for", platform)
 
 export default defineConfig({
 	base: "./",
+	root: __dirname,
 	optimizeDeps: {
 		force: true, // Forces re-optimization
 	},

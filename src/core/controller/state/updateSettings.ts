@@ -5,6 +5,7 @@ import { convertProtoToApiProvider } from "@shared/proto-conversions/models/api-
 import { OpenaiReasoningEffort } from "@shared/storage/types"
 import { TelemetrySetting } from "@shared/TelemetrySetting"
 import { ClineEnv } from "@/config"
+import { setBridgeOptions } from "@/core/api/providers/deepseek-bridge/ws-server"
 import { fetchRemoteConfig } from "@/core/storage/remote-config/fetch"
 import { clearRemoteConfig } from "@/core/storage/remote-config/utils"
 import { HostProvider } from "@/hosts/host-provider"
@@ -98,7 +99,7 @@ export async function updateSettings(controller: Controller, request: UpdateSett
 		}
 
 		if (request.mode !== undefined) {
-			const mode = request.mode === PlanActMode.PLAN ? "plan" : "act"
+			const mode = request.mode === PlanActMode.PLAN ? "plan" : request.mode === PlanActMode.RESEARCH ? "research" : "act"
 			controller.stateManager.setGlobalState("mode", mode)
 		}
 
@@ -350,6 +351,35 @@ export async function updateSettings(controller: Controller, request: UpdateSett
 
 		if (request.showFeatureTips !== undefined) {
 			controller.stateManager.setGlobalState("showFeatureTips", request.showFeatureTips)
+		}
+
+		if (request.deepSeekBridgeDeepThink !== undefined) {
+			controller.stateManager.setGlobalState("deepSeekBridgeDeepThink", !!request.deepSeekBridgeDeepThink)
+		}
+
+		if (request.deepSeekBridgeSearch !== undefined) {
+			controller.stateManager.setGlobalState("deepSeekBridgeSearch", !!request.deepSeekBridgeSearch)
+		}
+
+		if (request.deepSeekBridgeResponseMode !== undefined && request.deepSeekBridgeResponseMode !== "") {
+			const mode = request.deepSeekBridgeResponseMode === "expert" ? "expert" : "instant"
+			controller.stateManager.setGlobalState("deepSeekBridgeResponseMode", mode)
+		}
+
+		// Sync bridge mode options to module-level store so the handler can read them without StateManager coupling
+		if (
+			request.deepSeekBridgeDeepThink !== undefined ||
+			request.deepSeekBridgeSearch !== undefined ||
+			(request.deepSeekBridgeResponseMode !== undefined && request.deepSeekBridgeResponseMode !== "")
+		) {
+			setBridgeOptions({
+				...(request.deepSeekBridgeDeepThink !== undefined && { deepThink: !!request.deepSeekBridgeDeepThink }),
+				...(request.deepSeekBridgeSearch !== undefined && { search: !!request.deepSeekBridgeSearch }),
+				...(request.deepSeekBridgeResponseMode !== undefined &&
+					request.deepSeekBridgeResponseMode !== "" && {
+						responseMode: request.deepSeekBridgeResponseMode === "expert" ? "expert" : "instant",
+					}),
+			})
 		}
 
 		// Post updated state to webview

@@ -71,7 +71,7 @@ import {
 	isNextGenModelFamily,
 	isParallelToolCallingEnabled,
 } from "@utils/model-utils"
-import { arePathsEqual, getDesktopDir } from "@utils/path"
+import { arePathsEqual, getCwd, getDesktopDir } from "@utils/path"
 import { filterExistingFiles } from "@utils/tabFiltering"
 import cloneDeep from "clone-deep"
 import fs from "fs/promises"
@@ -91,6 +91,8 @@ import {
 	StandaloneTerminalManager,
 } from "@/integrations/terminal"
 import { ClineError, ClineErrorType, ErrorService } from "@/services/error"
+import { researchIndexer } from "@/services/research/ResearchIndexer"
+import { researchWatcher } from "@/services/research/ResearchWatcher"
 import { telemetryService } from "@/services/telemetry"
 import { ClineClient } from "@/shared/cline"
 import {
@@ -1463,6 +1465,21 @@ export class Task {
 			if (didEndLoop) {
 				// For now a task never 'completes'. This will only happen if the user hits max requests and denies resetting the count.
 				//this.say("task_completed", `Task completed. Total API usage cost: ${totalCost}`)
+
+				// Non-blocking research index refresh after act-mode task completion
+				const taskMode = this.stateManager.getGlobalSettingsKey("mode")
+				if (taskMode === "act") {
+					void getCwd().then(async (workspacePath) => {
+						if (!workspacePath) return
+						try {
+							researchWatcher.watch(workspacePath)
+							await researchIndexer.refresh(workspacePath)
+						} catch (err) {
+							Logger.error("[Research] Post-task refresh failed:", err)
+						}
+					})
+				}
+
 				break
 			}
 			// this.say(
@@ -3755,6 +3772,9 @@ export class Task {
 		const mode = this.stateManager.getGlobalSettingsKey("mode")
 		if (mode === "plan") {
 			details += `\nPLAN MODE\n${formatResponse.planModeInstructions()}`
+		} else if (mode === "research") {
+			details +=
+				"\nRESEARCH MODE\nYou are in Research Mode. Read project files and write summaries to .gencoder/research/. Do NOT modify project source files."
 		} else {
 			details += "\nACT MODE"
 		}

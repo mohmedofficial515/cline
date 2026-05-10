@@ -943,7 +943,7 @@ export class ClineAgent implements acp.Agent {
 		})
 
 		// Validate mode
-		const validModes = ["plan", "act"]
+		const validModes = ["plan", "act", "research"]
 		if (!validModes.includes(params.modeId)) {
 			throw new Error(`Invalid mode: ${params.modeId}. Valid modes are: ${validModes.join(", ")}`)
 		}

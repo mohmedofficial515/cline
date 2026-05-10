@@ -1,7 +1,7 @@
 {
-	"name": "claude-dev",
-	"displayName": "Cline",
-	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
+	"name": "gencoder",
+	"displayName": "GenCoder",
+	"description": "Autonomous coding agent — build complete projects with DeepSeek AI, edit files, run commands, and connect your own tools via MCP, right inside VS Code.",
 	"version": "3.82.0",
 	"icon": "assets/icons/icon.png",
 	"workspaces": [
@@ -12,15 +12,15 @@
 		"vscode": "^1.84.0"
 	},
 	"author": {
-		"name": "Cline Bot Inc."
+		"name": "GenCoder"
 	},
 	"license": "Apache-2.0",
-	"publisher": "saoudrizwan",
+	"publisher": "mohmedofficial515",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cline/cline"
+		"url": "https://github.com/mohmedofficial515/gencoder"
 	},
-	"homepage": "https://cline.bot",
+	"homepage": "https://github.com/mohmedofficial515/gencoder",
 	"categories": [
 		"AI",
 		"Chat",
@@ -30,18 +30,14 @@
 		"Testing"
 	],
 	"keywords": [
-		"cline",
-		"claude",
-		"dev",
+		"gencoder",
+		"deepseek",
 		"mcp",
-		"openrouter",
 		"coding",
 		"agent",
 		"autonomous",
-		"chatgpt",
-		"sonnet",
 		"ai",
-		"llama"
+		"openai"
 	],
 	"activationEvents": [
 		"onLanguage",
@@ -52,80 +48,28 @@
 	"main": "./dist/extension.js",
 	"contributes": {
 		"icons": {
-			"cline-icon": {
-				"description": "cline",
+			"gencoder-icon": {
+				"description": "gencoder",
 				"default": {
 					"fontPath": "assets/icons/cline-bot.woff",
 					"fontCharacter": "\\e900"
 				}
 			}
 		},
-		"walkthroughs": [
-			{
-				"id": "ClineWalkthrough",
-				"title": "Meet Cline, your new coding partner",
-				"description": "Cline codes like a developer because it thinks like one. Here are 5 ways to put it to work:",
-				"steps": [
-					{
-						"id": "welcome",
-						"title": "Start with a Goal, Not Just a Prompt",
-						"description": "Tell Cline what you want to achieve. It plans, asks, and then codes, like a true partner.",
-						"media": {
-							"markdown": "walkthrough/step1.md"
-						}
-					},
-					{
-						"id": "learn",
-						"title": "Let Cline Learn Your Codebase",
-						"description": "Point Cline to your project. It builds understanding to make smart, context-aware changes.",
-						"media": {
-							"markdown": "walkthrough/step2.md"
-						}
-					},
-					{
-						"id": "advanced-features",
-						"title": "Always Use the Best AI Models",
-						"description": "Cline empowers you with State-of-the-Art AI, connecting to top models (Anthropic, Gemini, OpenAI & more).",
-						"media": {
-							"markdown": "walkthrough/step3.md"
-						}
-					},
-					{
-						"id": "mcp",
-						"title": "Extend with Powerful Tools (MCP)",
-						"description": "Connect to databases, APIs, or discover new capabilities in the MCP Marketplace.",
-						"media": {
-							"markdown": "walkthrough/step4.md"
-						}
-					},
-					{
-						"id": "getting-started",
-						"title": "You're Always in Control",
-						"description": "Review Cline's plans and diffs. Approve changes before they happen. No surprises.",
-						"media": {
-							"markdown": "walkthrough/step5.md"
-						},
-						"content": {
-							"path": "walkthrough/step5.md"
-						}
-					}
-				]
-			}
-		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "claude-dev-ActivityBar",
-					"title": "Cline",
+					"id": "gencoder-ActivityBar",
+					"title": "GenCoder",
 					"icon": "assets/icons/icon.svg"
 				}
 			]
 		},
 		"views": {
-			"claude-dev-ActivityBar": [
+			"gencoder-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "claude-dev.SidebarProvider",
+					"id": "gencoder.SidebarProvider",
 					"name": "",
 					"icon": "assets/icons/icon.svg"
 				}
@@ -133,117 +77,112 @@
 		},
 		"commands": [
 			{
-				"command": "cline.plusButtonClicked",
+				"command": "gencoder.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "cline.mcpButtonClicked",
+				"command": "gencoder.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "cline.historyButtonClicked",
+				"command": "gencoder.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "cline.accountButtonClicked",
+				"command": "gencoder.accountButtonClicked",
 				"title": "Account",
 				"icon": "$(account)"
 			},
 			{
-				"command": "cline.settingsButtonClicked",
+				"command": "gencoder.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "cline.dev.createTestTasks",
+				"command": "gencoder.dev.createTestTasks",
 				"title": "Create Test Tasks",
-				"category": "Cline",
-				"when": "cline.isDevMode"
+				"category": "GenCoder",
+				"when": "gencoder.isDevMode"
 			},
 			{
-				"command": "cline.dev.expireMcpOAuthTokens",
+				"command": "gencoder.dev.expireMcpOAuthTokens",
 				"title": "Expire MCP OAuth Tokens (for testing)",
-				"category": "Cline",
-				"when": "cline.isDevMode"
+				"category": "GenCoder",
+				"when": "gencoder.isDevMode"
 			},
 			{
-				"command": "cline.addToChat",
-				"title": "Add to Cline",
-				"category": "Cline"
+				"command": "gencoder.addToChat",
+				"title": "Add to GenCoder",
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.addTerminalOutputToChat",
-				"title": "Add to Cline",
-				"category": "Cline"
+				"command": "gencoder.addTerminalOutputToChat",
+				"title": "Add to GenCoder",
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.focusChatInput",
+				"command": "gencoder.focusChatInput",
 				"title": "Jump to Chat Input",
-				"category": "Cline"
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.generateGitCommitMessage",
-				"title": "Generate Commit Message with Cline",
-				"category": "Cline",
+				"command": "gencoder.generateGitCommitMessage",
+				"title": "Generate Commit Message with GenCoder",
+				"category": "GenCoder",
 				"icon": "$(cline-icon)"
 			},
 			{
-				"command": "cline.abortGitCommitMessage",
-				"title": "Generate Commit Message with Cline - Stop",
-				"category": "Cline",
+				"command": "gencoder.abortGitCommitMessage",
+				"title": "Generate Commit Message with GenCoder - Stop",
+				"category": "GenCoder",
 				"icon": "$(debug-stop)"
 			},
 			{
-				"command": "cline.explainCode",
-				"title": "Explain with Cline",
-				"category": "Cline"
+				"command": "gencoder.explainCode",
+				"title": "Explain with GenCoder",
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.improveCode",
-				"title": "Improve with Cline",
-				"category": "Cline"
+				"command": "gencoder.improveCode",
+				"title": "Improve with GenCoder",
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.jupyterGenerateCell",
-				"title": "Generate Jupyter Cell with Cline",
-				"category": "Cline",
+				"command": "gencoder.jupyterGenerateCell",
+				"title": "Generate Jupyter Cell with GenCoder",
+				"category": "GenCoder",
 				"icon": "$(sparkle)"
 			},
 			{
-				"command": "cline.jupyterExplainCell",
-				"title": "Explain Jupyter Cell with Cline",
-				"category": "Cline",
+				"command": "gencoder.jupyterExplainCell",
+				"title": "Explain Jupyter Cell with GenCoder",
+				"category": "GenCoder",
 				"icon": "$(question)"
 			},
 			{
-				"command": "cline.jupyterImproveCell",
-				"title": "Improve Jupyter Cell with Cline",
-				"category": "Cline",
+				"command": "gencoder.jupyterImproveCell",
+				"title": "Improve Jupyter Cell with GenCoder",
+				"category": "GenCoder",
 				"icon": "$(lightbulb)"
 			},
 			{
-				"command": "cline.openWalkthrough",
-				"title": "Open Walkthrough",
-				"category": "Cline"
-			},
-			{
-				"command": "cline.reconstructTaskHistory",
+				"command": "gencoder.reconstructTaskHistory",
 				"title": "Reconstruct Task History",
-				"category": "Cline"
+				"category": "GenCoder"
 			},
 			{
-				"command": "cline.reviewComment.reply",
+				"command": "gencoder.reviewComment.reply",
 				"title": "Reply",
-				"category": "Cline",
+				"category": "GenCoder",
 				"enablement": "!commentIsEmpty"
 			},
 			{
-				"command": "cline.reviewComment.addToChat",
-				"title": "Add to Cline Chat",
-				"category": "Cline",
+				"command": "gencoder.reviewComment.addToChat",
+				"title": "Add to GenCoder Chat",
+				"category": "GenCoder",
 				"icon": "$(link-external)"
 			}
 		],
@@ -251,10 +190,10 @@
 			{
 				"command": "editor.action.submitComment",
 				"key": "enter",
-				"when": "commentEditorFocused && commentController == cline-ai-review && !commentIsEmpty"
+				"when": "commentEditorFocused && commentController == gencoder-ai-review && !commentIsEmpty"
 			},
 			{
-				"command": "cline.addToChat",
+				"command": "gencoder.addToChat",
 				"key": "cmd+'",
 				"mac": "cmd+'",
 				"win": "ctrl+'",
@@ -262,11 +201,11 @@
 				"when": "editorHasSelection"
 			},
 			{
-				"command": "cline.generateGitCommitMessage",
+				"command": "gencoder.generateGitCommitMessage",
 				"when": "config.git.enabled && scmProvider == git"
 			},
 			{
-				"command": "cline.focusChatInput",
+				"command": "gencoder.focusChatInput",
 				"key": "cmd+'",
 				"mac": "cmd+'",
 				"win": "ctrl+'",
@@ -277,114 +216,112 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "cline.plusButtonClicked",
+					"command": "gencoder.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == gencoder.SidebarProvider"
 				},
 				{
-					"command": "cline.mcpButtonClicked",
+					"command": "gencoder.mcpButtonClicked",
 					"group": "navigation@2",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == gencoder.SidebarProvider"
 				},
 				{
-					"command": "cline.historyButtonClicked",
+					"command": "gencoder.historyButtonClicked",
 					"group": "navigation@3",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == gencoder.SidebarProvider"
 				},
 				{
-					"command": "cline.accountButtonClicked",
+					"command": "gencoder.accountButtonClicked",
 					"group": "navigation@5",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == gencoder.SidebarProvider"
 				},
 				{
-					"command": "cline.settingsButtonClicked",
+					"command": "gencoder.settingsButtonClicked",
 					"group": "navigation@6",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == gencoder.SidebarProvider"
 				}
 			],
 			"editor/context": [
 				{
-					"command": "cline.addToChat",
+					"command": "gencoder.addToChat",
 					"group": "navigation",
 					"when": "editorHasSelection"
 				}
 			],
 			"terminal/context": [
 				{
-					"command": "cline.addTerminalOutputToChat",
+					"command": "gencoder.addTerminalOutputToChat",
 					"group": "navigation"
 				}
 			],
 			"scm/title": [
 				{
-					"command": "cline.generateGitCommitMessage",
+					"command": "gencoder.generateGitCommitMessage",
 					"group": "navigation",
-					"when": "config.git.enabled && scmProvider == git && !cline.isGeneratingCommit"
+					"when": "config.git.enabled && scmProvider == git && !gencoder.isGeneratingCommit"
 				},
 				{
-					"command": "cline.abortGitCommitMessage",
+					"command": "gencoder.abortGitCommitMessage",
 					"group": "navigation",
-					"when": "config.git.enabled && scmProvider == git && cline.isGeneratingCommit"
+					"when": "config.git.enabled && scmProvider == git && gencoder.isGeneratingCommit"
 				}
 			],
 			"notebook/toolbar": [
 				{
-					"command": "cline.jupyterGenerateCell",
+					"command": "gencoder.jupyterGenerateCell",
 					"group": "navigation/add@1",
 					"when": "notebookType == 'jupyter-notebook'"
 				}
 			],
 			"notebook/cell/title": [
 				{
-					"command": "cline.jupyterExplainCell",
+					"command": "gencoder.jupyterExplainCell",
 					"group": "inline@1",
 					"when": "notebookType == 'jupyter-notebook'"
 				},
 				{
-					"command": "cline.jupyterImproveCell",
+					"command": "gencoder.jupyterImproveCell",
 					"group": "inline@2",
 					"when": "notebookType == 'jupyter-notebook'"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "cline.generateGitCommitMessage",
-					"when": "config.git.enabled && !cline.isGeneratingCommit"
+					"command": "gencoder.generateGitCommitMessage",
+					"when": "config.git.enabled && !gencoder.isGeneratingCommit"
 				},
 				{
-					"command": "cline.abortGitCommitMessage",
-					"when": "config.git.enabled && cline.isGeneratingCommit"
+					"command": "gencoder.abortGitCommitMessage",
+					"when": "config.git.enabled && gencoder.isGeneratingCommit"
 				},
 				{
-					"command": "cline.reviewComment.reply",
+					"command": "gencoder.reviewComment.reply",
 					"when": "false"
 				}
 			],
 			"comments/commentThread/context": [
 				{
-					"command": "cline.reviewComment.reply",
+					"command": "gencoder.reviewComment.reply",
 					"group": "inline",
-					"when": "commentController == cline-ai-review"
+					"when": "commentController == gencoder-ai-review"
 				}
 			],
 			"comments/commentThread/title": [
 				{
-					"command": "cline.reviewComment.addToChat",
+					"command": "gencoder.reviewComment.addToChat",
 					"group": "inline",
-					"when": "commentController == cline-ai-review"
+					"when": "commentController == gencoder-ai-review"
 				}
 			]
 		},
 		"configuration": {
-			"title": "Cline",
+			"title": "GenCoder",
 			"properties": {}
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run package",
+		"vscode:prepublish": "echo already-built",
 		"compile": "npm run check-types && npm run lint && node esbuild.mjs",
-		"compile-standalone": "npm run check-types && npm run lint && node esbuild.mjs --standalone",
-		"compile-standalone-npm": "npm run protos && npm run check-types && npm run lint && node esbuild.mjs --standalone",
 		"cli:link": "cd cli && npm run link",
 		"cli:build": "npm run protos && cd cli && npm run build",
 		"cli:run": "node cli/dist/cli.mjs",
@@ -393,8 +330,6 @@
 		"cli:test": "cd cli && npm run test",
 		"test:install": "bash scripts/test-install.sh",
 		"cli:dev": "cd cli && npm run dev",
-		"postcompile-standalone": "node scripts/package-standalone.mjs",
-		"postcompile-standalone-npm": "node scripts/package-npm.mjs",
 		"dev": "npm run protos && npm run watch",
 		"watch": "npx npm-run-all -p watch:*",
 		"watch:esbuild": "node esbuild.mjs --watch",
@@ -417,18 +352,16 @@
 		"fix:all": "biome check --no-errors-on-unmatched --files-ignore-unknown=true --write --diagnostic-level=error --unsafe",
 		"ci:check-all": "npx npm-run-all -p check-types lint format",
 		"ci:build": "npm run protos && npm run build:webview && node esbuild.mjs && npm run compile-tests",
-		"pretest": "npm run compile && npm run compile-tests && npm run compile-standalone && npm run lint",
+		"pretest": "npm run compile && npm run compile-tests && npm run lint",
 		"test": "npx npm-run-all test:unit test:integration",
 		"test:integration": "vscode-test",
 		"test:unit": "cross-env TS_NODE_PROJECT=./tsconfig.unit-test.json mocha",
 		"test:coverage": "vscode-test --coverage",
 		"test:sca-server": "npx tsx watch scripts/test-standalone-core-api-server.ts",
-		"test:tp-orchestrator": "npx tsx scripts/testing-platform-orchestrator.ts",
 		"e2e": "playwright test -c playwright.config.ts",
 		"test:e2e:build": "vsce package --allow-package-secrets sendgrid --out dist/e2e.vsix",
 		"test:e2e": "playwright install && npm run test:e2e:build && node src/test/e2e/utils/build.mjs && playwright test",
 		"test:e2e:optimal": "npm run test:e2e:build && node src/test/e2e/utils/build.mjs && playwright test",
-		"test:e2e:cli:tui": "cd tests/e2e/cli && tui-test",
 		"test:e2e:ui": "npx tsx scripts/interactive-playwright.ts",
 		"install:all": "npm install && cd webview-ui && npm install",
 		"dev:webview": "cd webview-ui && npm run dev",
@@ -478,6 +411,7 @@
 		"@types/sinon": "^21.0.0",
 		"@types/turndown": "^5.0.5",
 		"@types/vscode": "1.84.0",
+		"@types/ws": "^8.18.1",
 		"@vscode/test-cli": "^0.0.12",
 		"@vscode/test-electron": "^2.5.2",
 		"@vscode/vsce": "^3.6.0",
@@ -600,6 +534,7 @@
 		"uuid": "^11.1.0",
 		"vscode-uri": "^3.1.0",
 		"web-tree-sitter": "^0.22.6",
+		"ws": "^8.20.0",
 		"zod": "^3.24.2"
 	},
 	"overrides": {

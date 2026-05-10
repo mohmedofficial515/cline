@@ -37,6 +37,8 @@ service StateService {
   rpc refreshRemoteConfig(EmptyRequest) returns (Empty);
   rpc testOtelConnection(EmptyRequest) returns (TestConnectionResult);
   rpc testPromptUploading(EmptyRequest) returns (TestConnectionResult);
+  rpc refreshResearchIndex(EmptyRequest) returns (Boolean);
+  rpc rebuildResearchIndex(EmptyRequest) returns (Boolean);
 }
 
 message AutoApprovalActions {
@@ -287,6 +289,9 @@ message Settings {
   optional OpenRouterModelInfo act_mode_cline_model_info = 181;
   optional bool show_feature_tips = 182;
   optional bool lazy_teammate_mode_enabled = 183;
+  optional bool deep_seek_bridge_deep_think = 184;
+  optional bool deep_seek_bridge_search = 185;
+  optional string deep_seek_bridge_response_mode = 186;
 }
 
 message State {
@@ -319,6 +324,7 @@ message TogglePlanActModeRequest {
 enum PlanActMode {
   PLAN = 0;
   ACT = 1;
+  RESEARCH = 2;
 }
 
 enum OpenaiReasoningEffort {
@@ -430,6 +436,9 @@ message UpdateSettingsRequest {
   optional bool double_check_completion_enabled = 41;
   optional bool show_feature_tips = 42;
   optional bool lazy_teammate_mode_enabled = 43;
+  optional bool deep_seek_bridge_deep_think = 44;
+  optional bool deep_seek_bridge_search = 45;
+  optional string deep_seek_bridge_response_mode = 46;
 }
 
 message UpdateTerminalConnectionTimeoutRequest {

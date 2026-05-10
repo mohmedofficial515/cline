@@ -12,6 +12,7 @@ import { CerebrasHandler } from "./providers/cerebras"
 import { ClaudeCodeHandler } from "./providers/claude-code"
 import { ClineHandler } from "./providers/cline"
 import { DeepSeekHandler } from "./providers/deepseek"
+import { DeepSeekBridgeHandler } from "./providers/deepseek-bridge"
 import { DifyHandler } from "./providers/dify"
 import { DoubaoHandler } from "./providers/doubao"
 import { FireworksHandler } from "./providers/fireworks"
@@ -462,6 +463,8 @@ function createHandlerForProvider(
 				wandbApiKey: options.wandbApiKey,
 				apiModelId: mode === "plan" ? options.planModeApiModelId : options.actModeApiModelId,
 			})
+		case "deepseek-bridge":
+			return new DeepSeekBridgeHandler()
 		default:
 			return new AnthropicHandler({
 				onRetryAttempt: options.onRetryAttempt,

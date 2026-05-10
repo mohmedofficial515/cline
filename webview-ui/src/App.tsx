@@ -88,7 +88,7 @@ const AppContent = () => {
 		setShowKanbanModal(false)
 		if (doNotShowAgain) {
 			StateServiceClient.dismissBanner({ value: CLINE_KANBAN_MODAL_DISMISS_ID }).catch((error) =>
-				console.error("Failed to persist Cline Kanban modal dismissal:", error),
+				console.error("Failed to persist GenCoder Kanban modal dismissal:", error),
 			)
 		}
 	}, [])

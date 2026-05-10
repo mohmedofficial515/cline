@@ -1004,6 +1004,9 @@ export class Controller {
 			banners,
 			welcomeBanners,
 			openAiCodexIsAuthenticated,
+			deepSeekBridgeDeepThink: this.stateManager.getGlobalSettingsKey("deepSeekBridgeDeepThink"),
+			deepSeekBridgeSearch: this.stateManager.getGlobalSettingsKey("deepSeekBridgeSearch"),
+			deepSeekBridgeResponseMode: this.stateManager.getGlobalSettingsKey("deepSeekBridgeResponseMode"),
 		}
 	}
 

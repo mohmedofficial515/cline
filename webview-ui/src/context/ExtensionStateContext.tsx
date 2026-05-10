@@ -290,6 +290,9 @@ export const ExtensionStateContextProvider: React.FC<{
 		hooksEnabled: false,
 		nativeToolCallSetting: false,
 		enableParallelToolCalling: false,
+		deepSeekBridgeDeepThink: false,
+		deepSeekBridgeSearch: false,
+		deepSeekBridgeResponseMode: "instant" as const,
 	})
 	const [expandTaskHeader, setExpandTaskHeader] = useState(true)
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -399,6 +402,9 @@ export const ExtensionStateContextProvider: React.FC<{
 			},
 			onError: (error) => {
 				console.error("Error in state subscription:", error)
+				// Ensure the webview renders even if state subscription fails,
+				// rather than staying on a permanent black screen.
+				setDidHydrateState(true)
 			},
 			onComplete: () => {
 				console.log("State subscription completed")
@@ -764,17 +770,17 @@ export const ExtensionStateContextProvider: React.FC<{
 		refreshLiteLlmModels,
 	])
 
-	// Refresh Cline models function
+	// Refresh GenCoder models function
 	const refreshClineModels = useCallback(() => {
 		ModelsServiceClient.refreshClineModelsRpc(EmptyRequest.create({}))
 			.then((response: OpenRouterCompatibleModelInfo) => {
 				const models = fromProtobufModels(response.models)
 				setClineModels((prev) => (Object.keys(models).length > 0 ? models : (prev ?? null)))
 			})
-			.catch((error: Error) => console.error("Failed to refresh Cline models:", error))
+			.catch((error: Error) => console.error("Failed to refresh GenCoder models:", error))
 	}, [])
 
-	// Auto-refresh Cline models when provider is cline
+	// Auto-refresh GenCoder models when provider is cline
 	useEffect(() => {
 		const hasClineProvider =
 			state.apiConfiguration?.actModeApiProvider === "cline" || state.apiConfiguration?.planModeApiProvider === "cline"

@@ -13,7 +13,7 @@ import { normalizeOpenaiReasoningEffort } from "./reasoningEffort"
  */
 export async function updateTaskSettings(controller: Controller, request: UpdateTaskSettingsRequest): Promise<Empty> {
 	const convertPlanActMode = (mode: PlanActMode): Mode => {
-		return mode === PlanActMode.PLAN ? "plan" : "act"
+		return mode === PlanActMode.PLAN ? "plan" : mode === PlanActMode.RESEARCH ? "research" : "act"
 	}
 
 	try {

@@ -94,9 +94,22 @@ async function compileProtos() {
 	log_verbose(chalk.green(`TypeScript files generated in: ${TS_OUT_DIR}`))
 }
 
+// On Windows, protoc may need an explicit path to google/protobuf well-known types.
+// Check tmp-protoc/include first (populated by local setup), then the directory
+// adjacent to whatever protoc binary is in use.
+const PROTOBUF_INCLUDE = (() => {
+	if (!isWindows) return null
+	const candidates = [path.resolve("tmp-protoc/include"), path.join(path.dirname(PROTOC), "..", "include")]
+	for (const c of candidates) {
+		if (fsSync.existsSync(path.join(c, "google", "protobuf", "timestamp.proto"))) return c
+	}
+	return null
+})()
+
 function tsProtoc(outDir, protoFiles, protoOptions) {
 	const args = [
 		`--proto_path=${PROTO_DIR}`,
+		...(PROTOBUF_INCLUDE ? [`--proto_path=${PROTOBUF_INCLUDE}`] : []),
 		`--plugin=protoc-gen-ts_proto=${TS_PROTO_PLUGIN}`,
 		`--ts_proto_out=${outDir}`,
 		`--ts_proto_opt=${protoOptions.join(",")}`,

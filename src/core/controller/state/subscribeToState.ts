@@ -36,7 +36,15 @@ export async function subscribeToState(
 	}
 
 	// Send the initial state
-	const initialState = await controller.getStateToPostToWebview()
+	let initialState: Awaited<ReturnType<typeof controller.getStateToPostToWebview>>
+	try {
+		initialState = await controller.getStateToPostToWebview()
+	} catch (error) {
+		Logger.error("Error getting initial state for subscription:", error)
+		activeStateSubscriptions.delete(responseStream)
+		return
+	}
+
 	const initialStateJson = JSON.stringify(initialState)
 
 	recordStateSizeTelemetry(Buffer.byteLength(initialStateJson, "utf8"))

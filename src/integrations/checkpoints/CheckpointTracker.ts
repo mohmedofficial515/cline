@@ -133,13 +133,15 @@ class CheckpointTracker {
 			Logger.info(`Creating new CheckpointTracker for task ${taskId}`)
 			const startTime = performance.now()
 
-			// Check if checkpoints are disabled by setting
-			if (!enableCheckpointsSetting) {
-				Logger.info(`Checkpoints disabled by setting for task ${taskId}`)
-				return undefined // Don't create tracker when disabled
-			}
+			// GenCoder: checkpoints (shadow-git) are disabled unconditionally to avoid
+			// "Failed to add at least one file(s) to checkpoints shadow git" errors on
+			// workspaces with non-ASCII paths or restrictive permissions. Callers
+			// already handle undefined as "no checkpoint manager available".
+			Logger.info(`Checkpoints disabled (GenCoder hardcoded) for task ${taskId}`)
+			return undefined
 
-			// Check if git is installed by attempting to get version
+			// shadow-git disabled but code preserved for reference
+			// biome-ignore lint/correctness/noUnreachable: shadow-git disabled but code preserved for reference
 			try {
 				await simpleGit().version()
 			} catch (_error) {
@@ -147,19 +149,23 @@ class CheckpointTracker {
 			}
 
 			// Validate and normalize workspace paths - for now, we just use the first valid path
-			const pathsToValidate = Array.isArray(workspacePaths) ? workspacePaths : [workspacePaths]
+			const pathsToValidate: string[] = Array.isArray(workspacePaths)
+				? (workspacePaths as string[])
+				: [workspacePaths as string]
 			const { validateWorkspacePath } = await import("./CheckpointUtils")
 
-			for (const workspacePath of pathsToValidate) {
-				if (!workspacePath) {
+			for (const wp of pathsToValidate) {
+				if (!wp) {
 					throw new Error("At least one workspace path must be provided")
 				}
 
-				await validateWorkspacePath(workspacePath)
+				await validateWorkspacePath(wp)
 			}
 
 			// For now, we just use the first valid path
-			const workingDir = Array.isArray(workspacePaths) ? workspacePaths[0] : workspacePaths
+			const workingDir: string = Array.isArray(workspacePaths)
+				? ((workspacePaths as string[])[0] ?? "")
+				: (workspacePaths as string)
 
 			const cwdHash = hashWorkingDir(workingDir)
 			Logger.debug(`Repository ID (cwdHash): ${cwdHash}`)
@@ -210,7 +216,7 @@ class CheckpointTracker {
 	 * - Stage or commit files
 	 */
 	public async commit(): Promise<string | undefined> {
-		let lockAcquired: boolean = false
+		let lockAcquired = false
 
 		try {
 			await this.sendCheckpointSubscriptionEvent("CHECKPOINT_COMMIT", true)
@@ -334,7 +340,7 @@ class CheckpointTracker {
 	 * - Reset to target commit
 	 */
 	public async resetHead(commitHash: string): Promise<void> {
-		let lockAcquired: boolean = false
+		let lockAcquired = false
 
 		try {
 			Logger.info(`Resetting to checkpoint: ${commitHash}`)

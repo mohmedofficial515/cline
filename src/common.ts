@@ -60,22 +60,31 @@ export async function initialize(storageContext: StorageContext): Promise<Webvie
 	}
 
 	// =============== Webview services ===============
+	// Webview is created first so it is always registered, even if subsequent
+	// initialization steps fail.
 	const webview = HostProvider.get().createWebviewProvider()
 
-	const stateManager = StateManager.get()
-	// Non-blocking announcement check and display
-	showVersionUpdateAnnouncement(stateManager)
-	// Check if this workspace was opened from worktree quick launch
-	await checkWorktreeAutoOpen(stateManager)
+	try {
+		const stateManager = StateManager.get()
+		// Non-blocking announcement check and display
+		showVersionUpdateAnnouncement(stateManager)
+		// Check if this workspace was opened from worktree quick launch
+		await checkWorktreeAutoOpen(stateManager)
 
-	// =============== Background sync and cleanup tasks ===============
-	// Use remote config blobStoreConfig if available, otherwise fall back to env vars
-	const blobStoreSettings = stateManager.getRemoteConfigSettings()?.blobStoreConfig ?? getBlobStoreSettingsFromEnv()
-	syncWorker().init({ ...blobStoreSettings, userDistinctId: getDistinctId() })
+		// =============== Background sync and cleanup tasks ===============
+		// Use remote config blobStoreConfig if available, otherwise fall back to env vars
+		const blobStoreSettings = stateManager.getRemoteConfigSettings()?.blobStoreConfig ?? getBlobStoreSettingsFromEnv()
+		syncWorker().init({ ...blobStoreSettings, userDistinctId: getDistinctId() })
+		// Clean up orphaned file context warnings (startup cleanup)
+		FileContextTracker.cleanupOrphanedWarnings(stateManager)
+	} catch (error) {
+		Logger.error("[Cline] Post-init tasks failed (StateManager may be unavailable):", error)
+		// Fall back to env-based sync worker config so background sync still runs
+		syncWorker().init({ ...getBlobStoreSettingsFromEnv(), userDistinctId: getDistinctId() })
+	}
+
 	// Clean up old temp files in background (non-blocking) and start periodic cleanup every 24 hours
 	ClineTempManager.startPeriodicCleanup()
-	// Clean up orphaned file context warnings (startup cleanup)
-	FileContextTracker.cleanupOrphanedWarnings(stateManager)
 
 	telemetryService.captureExtensionActivated()
 

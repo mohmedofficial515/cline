@@ -194,7 +194,7 @@ const errorTypes = ["api_req_failed", "mistake_limit_reached"]
 /**
  * Get button configuration based on message type and state
  */
-export function getButtonConfig(message: ClineMessage | undefined, isStreaming: boolean = false): ButtonConfig {
+export function getButtonConfig(message: ClineMessage | undefined, isStreaming = false): ButtonConfig {
 	if (!message) {
 		return BUTTON_CONFIGS.default
 	}
@@ -274,7 +274,7 @@ export function getButtonConfig(message: ClineMessage | undefined, isStreaming: 
 
 interface ActionButtonsProps {
 	config: ButtonConfig
-	mode?: "act" | "plan"
+	mode?: "act" | "plan" | "research"
 }
 
 /**

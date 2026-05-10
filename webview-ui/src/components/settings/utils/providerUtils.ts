@@ -13,6 +13,8 @@ import {
 	cerebrasModels,
 	claudeCodeDefaultModelId,
 	claudeCodeModels,
+	deepSeekBridgeDefaultModelId,
+	deepSeekBridgeModels,
 	deepSeekDefaultModelId,
 	deepSeekModels,
 	doubaoDefaultModelId,
@@ -122,6 +124,8 @@ export function getModelsForProvider(
 			return nebiusModels
 		case "wandb":
 			return wandbModels
+		case "deepseek-bridge":
+			return deepSeekBridgeModels
 		case "sambanova":
 			return sambanovaModels
 		case "cerebras":
@@ -379,6 +383,8 @@ export function normalizeApiConfiguration(
 			return getProviderData(nebiusModels, nebiusDefaultModelId)
 		case "wandb":
 			return getProviderData(wandbModels, wandbDefaultModelId)
+		case "deepseek-bridge":
+			return getProviderData(deepSeekBridgeModels, deepSeekBridgeDefaultModelId)
 		case "sambanova":
 			return getProviderData(sambanovaModels, sambanovaDefaultModelId)
 		case "cerebras":

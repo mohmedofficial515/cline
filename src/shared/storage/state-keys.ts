@@ -255,7 +255,7 @@ const USER_SETTINGS_FIELDS = {
 	},
 	telemetrySetting: { default: "unset" as TelemetrySetting },
 	planActSeparateModelsSetting: { default: false as boolean, isComputed: true },
-	enableCheckpointsSetting: { default: true as boolean },
+	enableCheckpointsSetting: { default: false as boolean },
 	shellIntegrationTimeout: { default: 4000 as number },
 	defaultTerminalProfile: { default: "default" as string },
 	terminalOutputLineLimit: { default: 500 as number },
@@ -277,6 +277,11 @@ const USER_SETTINGS_FIELDS = {
 	doubleCheckCompletionEnabled: { default: false as boolean },
 	lazyTeammateModeEnabled: { default: false as boolean },
 	showFeatureTips: { default: true as boolean },
+
+	// DeepSeek Bridge mode controls — persisted so toolbar state survives reload
+	deepSeekBridgeDeepThink: { default: false as boolean },
+	deepSeekBridgeSearch: { default: false as boolean },
+	deepSeekBridgeResponseMode: { default: "instant" as "instant" | "expert" },
 
 	// OpenTelemetry configuration
 	openTelemetryEnabled: { default: true as boolean },

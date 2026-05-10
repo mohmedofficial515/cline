@@ -42,6 +42,7 @@ import {
 	validateSlashCommand,
 } from "@/utils/slash-commands"
 import ClineRulesToggleModal from "../cline-rules/ClineRulesToggleModal"
+import BridgeModeToolbar from "./BridgeModeToolbar"
 import ServersToggleModal from "./ServersToggleModal"
 
 const { MAX_IMAGES_AND_FILES_PER_MESSAGE } = CHAT_CONSTANTS
@@ -92,7 +93,20 @@ interface GitCommit {
 }
 
 const PLAN_MODE_COLOR = "var(--vscode-activityWarningBadge-background)"
+const RESEARCH_MODE_COLOR = "var(--vscode-charts-purple)"
 const ACT_MODE_COLOR = "var(--vscode-focusBorder)"
+
+const SLIDER_COLORS: Record<string, string> = {
+	plan: PLAN_MODE_COLOR,
+	research: RESEARCH_MODE_COLOR,
+	act: ACT_MODE_COLOR,
+}
+
+const SLIDER_POSITIONS: Record<string, number> = {
+	plan: 0,
+	research: 1,
+	act: 2,
+}
 
 const SwitchContainer = styled.div<{ disabled: boolean }>`
 	display: flex;
@@ -110,14 +124,14 @@ const SwitchContainer = styled.div<{ disabled: boolean }>`
 `
 
 const Slider = styled.div.withConfig({
-	shouldForwardProp: (prop) => !["isAct", "isPlan"].includes(prop),
-})<{ isAct: boolean; isPlan?: boolean }>`
+	shouldForwardProp: (prop) => !["mode"].includes(prop),
+})<{ mode: string }>`
 	position: absolute;
 	height: 100%;
-	width: 50%;
-	background-color: ${(props) => (props.isPlan ? PLAN_MODE_COLOR : ACT_MODE_COLOR)};
+	width: 33.33%;
+	background-color: ${(props) => SLIDER_COLORS[props.mode] ?? ACT_MODE_COLOR};
 	transition: transform 0.2s ease;
-	transform: translateX(${(props) => (props.isAct ? "100%" : "0%")});
+	transform: translateX(${(props) => (SLIDER_POSITIONS[props.mode] ?? 2) * 100}%);
 `
 
 const ButtonGroup = styled.div`
@@ -1018,7 +1032,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		const onModeToggle = useCallback(() => {
 			void (async () => {
-				const convertedProtoMode = mode === "plan" ? PlanActMode.ACT : PlanActMode.PLAN
+				const nextMode: Record<string, PlanActMode> = {
+					plan: PlanActMode.RESEARCH,
+					research: PlanActMode.ACT,
+					act: PlanActMode.PLAN,
+				}
+				const convertedProtoMode = nextMode[mode] ?? PlanActMode.ACT
 				const response = await StateServiceClient.togglePlanActModeProto(
 					TogglePlanActModeRequest.create({
 						mode: convertedProtoMode,
@@ -1549,6 +1568,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</div>
 					</div>
 				</div>
+				<BridgeModeToolbar />
 				<div className="flex justify-between items-center -mt-[2px] px-3 pb-2">
 					{/* Always render both components, but control visibility with CSS */}
 					<div className="relative flex-1 min-w-0 h-5">
@@ -1615,23 +1635,27 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							className="text-xs px-2 flex flex-col gap-1"
 							hidden={shownTooltipMode === null}
 							side="top">
-							{`In ${shownTooltipMode === "act" ? "Act" : "Plan"}  mode, Cline will ${shownTooltipMode === "act" ? "complete the task immediately" : "gather information to architect a plan"}`}
+							{shownTooltipMode === "act"
+								? "In Act mode, GenCoder will complete the task immediately"
+								: shownTooltipMode === "research"
+									? "In Research mode, GenCoder builds a project knowledge index"
+									: "In Plan mode, GenCoder will gather information to architect a plan"}
 							<p className="text-description/80 text-xs mb-0">
 								Toggle w/ <kbd className="text-muted-foreground mx-1">{togglePlanActKeys}</kbd>
 							</p>
 						</TooltipContent>
 						<TooltipTrigger>
 							<SwitchContainer data-testid="mode-switch" disabled={false} onClick={onModeToggle}>
-								<Slider isAct={mode === "act"} isPlan={mode === "plan"} />
-								{["Plan", "Act"].map((m) => (
+								<Slider mode={mode} />
+								{(["Plan", "Research", "Act"] as const).map((m) => (
 									<div
 										aria-checked={mode === m.toLowerCase()}
 										className={cn(
-											"pt-0.5 pb-px px-2 z-10 text-xs w-1/2 text-center bg-transparent",
+											"pt-0.5 pb-px px-2 z-10 text-xs w-1/3 text-center bg-transparent",
 											mode === m.toLowerCase() ? "text-white" : "text-input-foreground",
 										)}
 										onMouseLeave={() => setShownTooltipMode(null)}
-										onMouseOver={() => setShownTooltipMode(m.toLowerCase() === "plan" ? "plan" : "act")}
+										onMouseOver={() => setShownTooltipMode(m.toLowerCase() as Mode)}
 										role="switch">
 										{m}
 									</div>

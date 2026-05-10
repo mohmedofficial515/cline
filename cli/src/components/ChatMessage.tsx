@@ -190,7 +190,7 @@ const MarkdownText: React.FC<{ children: string; color?: string }> = ({ children
 interface ChatMessageProps {
 	message: ClineMessage
 	isStreaming?: boolean
-	mode?: "act" | "plan"
+	mode?: "act" | "plan" | "research" | "research"
 }
 
 /**
@@ -265,7 +265,7 @@ function getToolMainArg(_toolName: string, args: Record<string, unknown>): strin
 const ToolCallText: React.FC<{
 	toolName: string
 	args: Record<string, unknown>
-	mode?: "act" | "plan"
+	mode?: "act" | "plan" | "research"
 	isAsk?: boolean
 }> = ({ toolName, args, mode, isAsk = false }) => {
 	const desc = getToolDescription(toolName)

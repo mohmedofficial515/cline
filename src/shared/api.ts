@@ -44,6 +44,7 @@ export type ApiProvider =
 	| "hicap"
 	| "nousResearch"
 	| "wandb"
+	| "deepseek-bridge"
 
 export const DEFAULT_API_PROVIDER = "openrouter" as ApiProvider
 
@@ -5060,3 +5061,19 @@ export const nousResearchModels = {
 			"This incarnation of Hermes 4 balances scale and size. It handles complex reasoning tasks, while staying fast and cost effective. A versatile choice for many use cases.",
 	},
 } as const satisfies Record<string, ModelInfo>
+
+// DeepSeek Bridge (Chrome extension — no API key required)
+export const deepSeekBridgeModels = {
+	"deepseek-bridge": {
+		maxTokens: 8192,
+		contextWindow: 131_072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Routes requests through chat.deepseek.com via the GenCoder Chrome extension. No API key required.",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+export type DeepSeekBridgeModelId = keyof typeof deepSeekBridgeModels
+export const deepSeekBridgeDefaultModelId = "deepseek-bridge" satisfies DeepSeekBridgeModelId

@@ -113,6 +113,9 @@ export interface ExtensionState {
 	banners?: BannerCardData[]
 	welcomeBanners?: BannerCardData[]
 	openAiCodexIsAuthenticated?: boolean
+	deepSeekBridgeDeepThink?: boolean
+	deepSeekBridgeSearch?: boolean
+	deepSeekBridgeResponseMode?: "instant" | "expert"
 }
 
 export interface ClineMessage {

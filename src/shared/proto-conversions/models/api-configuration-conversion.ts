@@ -290,6 +290,8 @@ function convertApiProviderToProto(provider: string | undefined): ProtoApiProvid
 			return ProtoApiProvider.NEBIUS
 		case "wandb":
 			return ProtoApiProvider.WANDB
+		case "deepseek-bridge":
+			return ProtoApiProvider.DEEPSEEK_BRIDGE
 		case "fireworks":
 			return ProtoApiProvider.FIREWORKS
 		case "asksage":
@@ -382,6 +384,8 @@ export function convertProtoToApiProvider(provider: ProtoApiProvider): ApiProvid
 			return "nebius"
 		case ProtoApiProvider.WANDB:
 			return "wandb"
+		case ProtoApiProvider.DEEPSEEK_BRIDGE:
+			return "deepseek-bridge"
 		case ProtoApiProvider.FIREWORKS:
 			return "fireworks"
 		case ProtoApiProvider.ASKSAGE:

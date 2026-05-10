@@ -1,6 +1,10 @@
 {
 	"list": [
 		{
+			"value": "deepseek-bridge",
+			"label": "DeepSeek (Free Bridge)"
+		},
+		{
 			"value": "cline",
 			"label": "Cline"
 		},

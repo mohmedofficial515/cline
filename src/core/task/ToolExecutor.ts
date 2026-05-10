@@ -296,6 +296,22 @@ export class ToolExecutor {
 	]
 
 	/**
+	 * Research mode restricts the same file-modification tools as plan mode,
+	 * EXCEPT writes targeting .gencoder/research/ (the indexer's own output dir).
+	 */
+	private static readonly RESEARCH_MODE_RESTRICTED_TOOLS: ClineDefaultTool[] = [
+		ClineDefaultTool.FILE_NEW,
+		ClineDefaultTool.FILE_EDIT,
+		ClineDefaultTool.NEW_RULE,
+		ClineDefaultTool.APPLY_PATCH,
+	]
+
+	private isResearchModeWriteAllowed(block: ToolUse): boolean {
+		const targetPath: string = block.params?.path ?? block.params?.diff ?? ""
+		return targetPath.replace(/\\/g, "/").includes(".gencoder/research/")
+	}
+
+	/**
 	 * Execute a tool through the coordinator if it's registered.
 	 *
 	 * This is the main entry point for tool execution, called by the Task class.
@@ -350,6 +366,22 @@ export class ToolExecutor {
 				await this.removeLastPartialMessageIfExistsWithType("say", "error")
 				await this.say("error", errorMessage)
 				// Only push the final error message when the streaming is done.
+				if (!block.partial) {
+					this.pushToolResult(formatResponse.toolError(errorMessage), block)
+				}
+				return true
+			}
+
+			// Logic for research-mode tool call restrictions
+			if (
+				this.stateManager.getGlobalSettingsKey("mode") === "research" &&
+				block.name &&
+				ToolExecutor.RESEARCH_MODE_RESTRICTED_TOOLS.includes(block.name) &&
+				!this.isResearchModeWriteAllowed(block)
+			) {
+				const errorMessage = `Tool '${block.name}' is not available in RESEARCH MODE. File modifications are restricted to the .gencoder/research/ directory. Switch to ACT MODE to edit project files.`
+				await this.removeLastPartialMessageIfExistsWithType("say", "error")
+				await this.say("error", errorMessage)
 				if (!block.partial) {
 					this.pushToolResult(formatResponse.toolError(errorMessage), block)
 				}

@@ -3,13 +3,13 @@ import { combineCommandSequences } from "@shared/combineCommandSequences"
 import { combineErrorRetryMessages } from "@shared/combineErrorRetryMessages"
 import { combineHookSequences } from "@shared/combineHookSequences"
 import { getApiMetrics, getLastApiReqTotalTokens } from "@shared/getApiMetrics"
-import { BooleanRequest, StringRequest } from "@shared/proto/cline/common"
-import { useCallback, useEffect, useMemo } from "react"
+import { BooleanRequest, EmptyRequest, StringRequest } from "@shared/proto/cline/common"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useMount } from "react-use"
 import { normalizeApiConfiguration } from "@/components/settings/utils/providerUtils"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { useShowNavbar } from "@/context/PlatformContext"
-import { FileServiceClient, UiServiceClient } from "@/services/grpc-client"
+import { FileServiceClient, StateServiceClient, UiServiceClient } from "@/services/grpc-client"
 import { Navbar } from "../menu/Navbar"
 import AutoApproveBar from "./auto-approve-menu/AutoApproveBar"
 // Import utilities and hooks from the new structure
@@ -37,6 +37,47 @@ interface ChatViewProps {
 	showHistoryView: () => void
 }
 
+function ResearchPanel() {
+	const [isRefreshing, setIsRefreshing] = useState(false)
+	const [isRebuilding, setIsRebuilding] = useState(false)
+
+	const handleRefresh = useCallback(async () => {
+		setIsRefreshing(true)
+		try {
+			await StateServiceClient.refreshResearchIndex(EmptyRequest.create({}))
+		} finally {
+			setIsRefreshing(false)
+		}
+	}, [])
+
+	const handleRebuild = useCallback(async () => {
+		if (!window.confirm("Rebuild the research index from scratch? This may take a minute.")) return
+		setIsRebuilding(true)
+		try {
+			await StateServiceClient.rebuildResearchIndex(EmptyRequest.create({}))
+		} finally {
+			setIsRebuilding(false)
+		}
+	}, [])
+
+	return (
+		<div className="flex gap-2 px-3 py-1.5 border-t border-(--vscode-input-border)">
+			<button
+				className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-(--vscode-button-secondaryBackground) text-(--vscode-button-secondaryForeground) hover:opacity-80 disabled:opacity-40"
+				disabled={isRefreshing || isRebuilding}
+				onClick={handleRefresh}>
+				{isRefreshing ? "Refreshing..." : "↻ Refresh Index"}
+			</button>
+			<button
+				className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-(--vscode-button-secondaryBackground) text-(--vscode-button-secondaryForeground) hover:opacity-80 disabled:opacity-40"
+				disabled={isRefreshing || isRebuilding}
+				onClick={handleRebuild}>
+				{isRebuilding ? "Rebuilding..." : "⟳ Rebuild From Scratch"}
+			</button>
+		</div>
+	)
+}
+
 // Use constants from the imported module
 const MAX_IMAGES_AND_FILES_PER_MESSAGE = CHAT_CONSTANTS.MAX_IMAGES_AND_FILES_PER_MESSAGE
 const QUICK_WINS_HISTORY_THRESHOLD = 3
@@ -59,7 +100,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const shouldShowQuickWins = isProdHostedApp && (!taskHistory || taskHistory.length < QUICK_WINS_HISTORY_THRESHOLD)
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
-	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
+	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see GenCoder.abort)
 	const modifiedMessages = useMemo(() => {
 		const slicedMessages = messages.slice(1)
 		// Only combine hook sequences if hooks are enabled
@@ -325,9 +366,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const scrollBehavior = useScrollBehavior(messages, visibleMessages, groupedMessages, expandedRows, setExpandedRows)
 
 	const placeholderText = useMemo(() => {
-		const text = task ? "Type a message..." : "Type your task here..."
-		return text
-	}, [task])
+		if (task) return "Type a message..."
+		if (mode === "research") return "Ask about the project, or click Refresh Index to scan workspace..."
+		return "Type your task here..."
+	}, [task, mode])
 
 	return (
 		<ChatLayout isHidden={isHidden}>
@@ -370,6 +412,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			</div>
 			<footer className="bg-(--vscode-sidebar-background)" style={{ gridRow: "2" }}>
 				<AutoApproveBar />
+				{mode === "research" && <ResearchPanel />}
 				<ActionButtons
 					chatState={chatState}
 					messageHandlers={messageHandlers}

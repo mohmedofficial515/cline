@@ -76,7 +76,7 @@ const SapAiCoreModelPicker: React.FC<SapAiCoreModelPickerProps> = ({
 			allSupportedModels.includes(deployedModel),
 		)
 
-		// Models that are supported in Cline but NOT deployed
+		// Models that are supported in GenCoder but NOT deployed
 		const supportedButNotDeployed = allSupportedModels.filter(
 			(supportedModel: string) => !deployedModelNames.includes(supportedModel),
 		)

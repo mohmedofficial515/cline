@@ -1,4 +1,4 @@
-import {
+﻿import {
 	ClineAskUseSubagents,
 	ClineMessage,
 	ClineSaySubagentStatus,
@@ -197,7 +197,7 @@ export default function SubagentStatusRow({ message, isLast, lastModifiedMessage
 			resumedBeforeNextVisibleMessage)
 
 	const singular = data.items.length === 1
-	const title = singular ? "Cline wants to use a subagent:" : "Cline wants to use subagents:"
+	const title = singular ? "GenCoder wants to use a subagent:" : "GenCoder wants to use subagents:"
 	const isPromptConstructionRow = message.ask === "use_subagents" || message.say === "use_subagents"
 	const toggleItem = (index: number) => {
 		setExpandedItems((prev) => ({
