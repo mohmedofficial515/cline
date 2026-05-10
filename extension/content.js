@@ -1,28 +1,10 @@
 // content.js — runs in ISOLATED world at document_start.
-// Two responsibilities:
-//   1. Immediately inject injected.js as a <script> into the MAIN world,
-//      BEFORE any of DeepSeek's own scripts run (so we can hook window.fetch).
-//   2. Bridge streaming messages between background.js (chrome.runtime Port)
-//      and injected.js (window.postMessage in MAIN world).
+// Bridges streaming messages between background.js (chrome.runtime Port)
+// and injected.js (window.postMessage in MAIN world).
+// injected.js is loaded via manifest content_scripts with world:"MAIN" — no dynamic injection needed.
 
 ;(() => {
-	// ── 1. Inject MAIN-world script ──────────────────────────────────────────
-	function injectMain() {
-		const target = document.head || document.documentElement
-		if (!target) {
-			requestAnimationFrame(injectMain)
-			return
-		}
-		const s = document.createElement("script")
-		s.src = chrome.runtime.getURL("injected.js")
-		s.onload = () => s.remove()
-		s.onerror = (e) => console.error("[hs-bridge] failed to inject:", e)
-		target.appendChild(s)
-		console.log("[hs-bridge] content.js injected MAIN-world script")
-	}
-	injectMain()
-
-	// ── 2. Bridge: chrome.runtime Port ↔ window.postMessage ─────────────────
+	// ── Bridge: chrome.runtime Port ↔ window.postMessage ─────────────────
 	const FIRST_CHUNK_TIMEOUT = 115_000
 
 	// Forward out-of-band events from injected.js → background.js (no port needed)

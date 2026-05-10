@@ -1,4 +1,4 @@
-// injected.js — runs in MAIN world (document_start)
+// injected.js — runs in MAIN world via manifest content_scripts (world:"MAIN").
 // Has access to window.fetch for network interception.
 // Communicates with content.js (isolated world) via window.postMessage.
 
@@ -21,17 +21,33 @@
 	// Selectors for chat-page mode controls — update here when deepseek.com restyling breaks them
 	const MODE_SELECTORS = {
 		deepThinkButton: [
+			// Try text content match first (most reliable for DeepSeek's current UI)
+			"#chat-input ~ * button",
+			'button[class*="think"]',
+			'button[class*="deepthink" i]',
 			'button[aria-label*="DeepThink" i]',
 			'button[aria-label*="deep think" i]',
-			'button:not([disabled])[class*="mode"][class*="think" i]',
+			'button[title*="DeepThink" i]',
+			'div[class*="toolbar"] button:first-child',
 		],
 		searchButton: [
+			'button[class*="search"]',
 			'button[aria-label*="Search" i]',
-			'button[aria-label*="search" i]',
-			'button:not([disabled])[class*="search" i]',
+			'button[title*="Search" i]',
+			'div[class*="toolbar"] button:nth-child(2)',
 		],
-		expertTab: ['button[role="tab"][aria-label*="Expert" i]', 'button[role="tab"]:not([disabled])'],
-		instantTab: ['button[role="tab"][aria-label*="Instant" i]'],
+		expertTab: [
+			'div[class*="mode"] button:last-child',
+			'button[class*="expert" i]',
+			'button[aria-label*="Expert" i]',
+			'[role="tab"]:last-child',
+		],
+		instantTab: [
+			'div[class*="mode"] button:first-child',
+			'button[class*="instant" i]',
+			'button[aria-label*="Instant" i]',
+			'[role="tab"]:first-child',
+		],
 		newChatButton: [
 			'button[aria-label*="New chat" i]',
 			'a[href="/"][aria-label*="new" i]',
@@ -100,7 +116,8 @@
 		}
 		if (_pending.size > 0 && (this.__hs_method || "").toUpperCase() === "POST") {
 			const url = this.__hs_url || ""
-			if (/\/completions?(\?|$|\/)/i.test(url)) {
+			// Match any POST that looks like a completion/streaming endpoint
+			if (/\/completion|\/chat\/complete|\/message|\/generate|\/stream/i.test(url)) {
 				console.log("[hs-bridge] XHR INTERCEPTING:", url)
 				const [reqId, capture] = _pending.entries().next().value
 				_pending.delete(reqId)
@@ -124,9 +141,24 @@
 
 				this.addEventListener("readystatechange", () => {
 					if (this.readyState >= 3) {
-						const newText = this.responseText.slice(lastIndex)
-						lastIndex = this.responseText.length
-						parser.feed(newText)
+						let text
+						try {
+							text = this.responseText
+						} catch (e) {
+							console.warn("[hs-bridge] XHR responseText error (state " + this.readyState + "):", e.message)
+							if (this.readyState === 4) {
+								console.log(
+									"[hs-bridge] XHR done (responseText unavailable), captured",
+									parser.getText().length,
+									"chars",
+								)
+								capture.resolve(parser.getText())
+							}
+							return
+						}
+						const newText = text.slice(lastIndex)
+						lastIndex = text.length
+						if (newText) parser.feed(newText)
 					}
 					if (this.readyState === 4) {
 						console.log("[hs-bridge] XHR done, captured", parser.getText().length, "chars")
@@ -164,10 +196,12 @@
 			}
 
 			const ctype = resp.headers.get("content-type") || ""
-			const isStream = /event-stream|application\/(x-)?ndjson|stream/i.test(ctype) || resp.body !== null
-			console.log("[hs-bridge] POST response", url, "content-type:", ctype)
+			const isEventStream = /text\/event-stream/i.test(ctype)
+			// Capture if SSE stream (by content-type) OR URL contains completion patterns
+			const isCompletionUrl = /\/completion|\/chat\/complete|\/message|\/generate|\/stream/i.test(url)
+			console.log("[hs-bridge] POST response url=", url, "ctype=", ctype, "isSSE=", isEventStream)
 
-			if (resp.body && /\/completions?(\?|$|\/)/i.test(url)) {
+			if (resp.body && (isEventStream || isCompletionUrl)) {
 				const [reqId, capture] = _pending.entries().next().value
 				_pending.delete(reqId)
 				clearTimeout(capture.timeoutId)
@@ -202,8 +236,16 @@
 		let inReasoningFrag = false
 		let responseText = ""
 		let reasoningText = ""
+		let _dbg = 0
 
 		const handle = (obj) => {
+			// Log first 8 SSE events so we can see DeepSeek's actual format
+			if (_dbg < 8) {
+				console.log("[hs-bridge] SSE[" + _dbg + "]:", JSON.stringify(obj).slice(0, 400))
+				_dbg++
+			}
+
+			// Format A: full snapshot — {v:{response:{fragments:[{type,content}]}}}
 			if (obj?.v?.response?.fragments && Array.isArray(obj.v.response.fragments)) {
 				const frags = obj.v.response.fragments
 				for (const f of frags) {
@@ -212,10 +254,28 @@
 				}
 				return
 			}
-			if (obj.p !== undefined) curPath = obj.p
-			if (obj.o !== undefined) curOp = obj.o
 
-			if (curPath === "response/fragments" && curOp === "APPEND" && Array.isArray(obj.v)) {
+			// Format B: OpenAI-style delta — {choices:[{delta:{content|text|reasoning_content}}]}
+			if (Array.isArray(obj?.choices) && obj.choices[0]?.delta !== undefined) {
+				const d = obj.choices[0].delta
+				if (typeof d.content === "string") responseText += d.content
+				if (typeof d.text === "string") responseText += d.text
+				if (typeof d.reasoning_content === "string") reasoningText += d.reasoning_content
+				if (typeof d.thinking_content === "string") reasoningText += d.thinking_content
+				return
+			}
+
+			// JSON-patch style: update path and op (normalize op to UPPERCASE)
+			if (obj.p !== undefined) curPath = obj.p
+			if (obj.o !== undefined) curOp = String(obj.o).toUpperCase()
+
+			// Format C: fragment append — {p:"response/fragments", o:"APPEND", v:[{type,content}]}
+			const normPath = (curPath || "").replace(/^\//, "") // strip leading slash
+			if (
+				(normPath === "response/fragments" || normPath === "v/response/fragments") &&
+				curOp === "APPEND" &&
+				Array.isArray(obj.v)
+			) {
 				for (const f of obj.v) {
 					if (f.type === "RESPONSE") {
 						inResponseFrag = true
@@ -233,14 +293,42 @@
 				return
 			}
 
-			if (curPath === "response/fragments/-1/content" && typeof obj.v === "string") {
+			// Format D: content delta — {p:"response/fragments/-1/content", v:"chunk"}
+			if (
+				(normPath === "response/fragments/-1/content" || normPath === "v/response/fragments/-1/content") &&
+				typeof obj.v === "string"
+			) {
 				if (inResponseFrag) {
 					if (curOp === "SET") responseText = obj.v
 					else responseText += obj.v
 				} else if (inReasoningFrag) {
 					if (curOp === "SET") reasoningText = obj.v
 					else reasoningText += obj.v
+				} else {
+					// No fragment type set yet — assume response
+					responseText += obj.v
 				}
+				return
+			}
+
+			// Format E: choices path delta — {p:"choices/0/delta/text", v:"chunk"}
+			if (
+				typeof obj.v === "string" &&
+				normPath &&
+				/^(choices\/\d+\/delta\/(text|content)|message\/content)$/.test(normPath)
+			) {
+				responseText += obj.v
+				return
+			}
+
+			// Format E2: thinking/reasoning via path
+			if (
+				typeof obj.v === "string" &&
+				normPath &&
+				/^choices\/\d+\/delta\/(thinking_content|reasoning_content)$/.test(normPath)
+			) {
+				reasoningText += obj.v
+				return
 			}
 		}
 
@@ -304,6 +392,17 @@
 		return null
 	}
 
+	// Find a button/element by its visible text (case-insensitive partial match)
+	function findByText(tag, text) {
+		const lc = text.toLowerCase()
+		const els = document.querySelectorAll(tag)
+		for (const el of els) {
+			const t = (el.textContent || el.innerText || "").trim().toLowerCase()
+			if (t === lc || t.startsWith(lc)) return el
+		}
+		return null
+	}
+
 	function setReactInputValue(el, value) {
 		if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
 			const proto = el.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype
@@ -363,42 +462,51 @@
 		if (!options) return
 		const { deepThink, search, responseMode } = options
 
+		// Helper: find mode button by text content first, then CSS selectors
+		function findModeBtn(textLabels, cssSelectors) {
+			for (const label of textLabels) {
+				const el = findByText("button", label) || findByText("div[role='button']", label)
+				if (el) return el
+			}
+			return findFirst(cssSelectors)
+		}
+
 		// DeepThink toggle
-		const dtBtn = findFirst(MODE_SELECTORS.deepThinkButton)
+		const dtBtn = findModeBtn(["DeepThink", "深度思考", "deep think"], MODE_SELECTORS.deepThinkButton)
 		if (dtBtn) {
 			const isOn = isButtonActive(dtBtn)
 			if (!!deepThink !== isOn) {
 				dtBtn.click()
-				await sleep(60)
+				await sleep(80)
 			}
 		} else if (deepThink) {
 			console.warn("[Bridge] DeepThink button not found — selector may need updating")
 		}
 
 		// Search toggle
-		const srBtn = findFirst(MODE_SELECTORS.searchButton)
+		const srBtn = findModeBtn(["Search", "搜索", "联网搜索"], MODE_SELECTORS.searchButton)
 		if (srBtn) {
 			const isOn = isButtonActive(srBtn)
 			if (!!search !== isOn) {
 				srBtn.click()
-				await sleep(60)
+				await sleep(80)
 			}
 		} else if (search) {
 			console.warn("[Bridge] Search button not found — selector may need updating")
 		}
 
-		// Instant / Expert tab
+		// Instant / Expert tab — find by text content
 		if (responseMode === "expert") {
-			const expertBtn = findFirst(MODE_SELECTORS.expertTab)
+			const expertBtn = findModeBtn(["Expert", "专家版"], MODE_SELECTORS.expertTab)
 			if (expertBtn && !isButtonActive(expertBtn)) {
 				expertBtn.click()
-				await sleep(60)
+				await sleep(80)
 			}
 		} else if (responseMode === "instant") {
-			const instantBtn = findFirst(MODE_SELECTORS.instantTab)
+			const instantBtn = findModeBtn(["Instant", "极速版", "快速"], MODE_SELECTORS.instantTab)
 			if (instantBtn && !isButtonActive(instantBtn)) {
 				instantBtn.click()
-				await sleep(60)
+				await sleep(80)
 			}
 		}
 	}
